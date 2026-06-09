@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CNRD-221 — Interface CAD · Sénégal</title>
+<meta name="description" content="Centre National de Réception et de Dispatch 221 — Interface opérateur CAD">
+<meta name="theme-color" content="#003D1A">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--g:#003D1A;--r:#CC0000;--b:#1A4A8A;--vert:#006633;--amber:#B8860B;--pur:#534AB7}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0f0a;color:#e8f5e8;height:100vh;overflow:hidden}
+.topbar{background:#001a0a;border-bottom:1px solid #1a3a1a;display:flex;align-items:center;justify-content:space-between;padding:8px 16px;height:40px}
+.logo{font-size:16px;font-weight:700;letter-spacing:1px;color:#fff}.logo span{color:#4ade80}
+.topbar-center{display:flex;align-items:center;gap:16px}
+.status-live{display:flex;align-items:center;gap:6px;font-size:11px;color:#86efac}
+.dot-live{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.clock{font-size:13px;color:#86efac;font-variant-numeric:tabular-nums;font-weight:500}
+.op-info{font-size:11px;color:#86efac;background:rgba(74,222,128,.1);border:0.5px solid rgba(74,222,128,.2);padding:3px 10px;border-radius:4px}
+.layout{display:grid;grid-template-columns:280px 1fr 260px;height:calc(100vh - 40px)}
+
+/* ═══ GAUCHE ═══ */
+.sidebar-left{background:#0d1a0d;border-right:1px solid #1a3a1a;display:flex;flex-direction:column;overflow:hidden}
+.sl-top{padding:10px 12px;border-bottom:1px solid #1a3a1a}
+.sec-label{font-size:10px;font-weight:600;color:#4a7a4a;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.stat-box{background:#111f11;border:0.5px solid #1a3a1a;border-radius:8px;padding:8px 10px;text-align:center}
+.stat-n{font-size:20px;font-weight:700;line-height:1}
+.stat-n.r{color:#f87171}.stat-n.a{color:#fbbf24}.stat-n.g{color:#4ade80}.stat-n.w{color:#e8f5e8}
+.stat-l{font-size:10px;color:#4a7a4a;margin-top:3px}
+.queue-header{padding:8px 12px;border-bottom:1px solid #1a3a1a;display:flex;align-items:center;justify-content:space-between}
+.q-count{font-size:10px;color:#4ade80;background:rgba(74,222,128,.1);padding:2px 8px;border-radius:20px;border:0.5px solid rgba(74,222,128,.2)}
+.queue-list{overflow-y:auto;flex:1}
+.queue-list::-webkit-scrollbar{width:3px}.queue-list::-webkit-scrollbar-track{background:#0d1a0d}.queue-list::-webkit-scrollbar-thumb{background:#1a3a1a}
+.qi{padding:10px 12px;border-bottom:0.5px solid #1a3a1a;cursor:pointer;display:flex;gap:9px;align-items:flex-start;transition:background .1s;border-left:3px solid transparent}
+.qi:hover{background:#111f11}
+.qi.active{background:#0f2a1f;border-left-color:#4ade80}
+.qi.crit{border-left-color:#f87171}
+.qi.urg{border-left-color:#fbbf24}
+.qi.done{border-left-color:#1a3a1a;opacity:.6}
+.qi-ico{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.qi-ico.med{background:#2d1515;color:#f87171}
+.qi-ico.fir{background:#2d200a;color:#fbbf24}
+.qi-ico.sec{background:#0f1f2d;color:#60a5fa}
+.qi-ico.ref{background:#1a0f2d;color:#c084fc}
+.qi-ico.traj{background:#1a2d0f;color:#86efac}
+.qi-info{flex:1;min-width:0}
+.qi-title{font-size:11px;font-weight:600;color:#e8f5e8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qi-sub{font-size:10px;color:#4a7a4a;margin-top:2px}
+.qi-badges{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.badge{font-size:9px;font-weight:600;padding:1px 6px;border-radius:20px}
+.badge-new{background:#3d1515;color:#f87171;border:0.5px solid #5a2020}
+.badge-prog{background:#3d2a00;color:#fbbf24;border:0.5px solid #5a3a00}
+.badge-done{background:#0f2d0f;color:#4ade80;border:0.5px solid #1a4a1a}
+.qi-time{font-size:10px;color:#4a7a4a;flex-shrink:0;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ═══ CENTRE ═══ */
+.main{display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;background:#0d1a0d;border-bottom:1px solid #1a3a1a;padding:0 16px}
+.tab{padding:9px 14px;font-size:11px;font-weight:600;color:#4a7a4a;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;font-family:inherit;transition:all .15s}
+.tab.active{color:#e8f5e8;border-bottom-color:#4ade80}
+.panel{display:none;flex:1;overflow-y:auto;padding:14px 16px}
+.panel.active{display:block}
+.panel::-webkit-scrollbar{width:3px}.panel::-webkit-scrollbar-track{background:#0a0f0a}.panel::-webkit-scrollbar-thumb{background:#1a3a1a}
+
+.alert-banner{border-radius:10px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:14px}
+.alert-banner.crit{background:#1a0a0a;border:1px solid #5a1a1a}
+.alert-banner.urg{background:#1a150a;border:1px solid #5a3a0a}
+.alert-banner.info{background:#0a1a1f;border:1px solid #0a3a5a}
+.ab-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.ab-icon.crit{background:#2d1515}
+.ab-icon.urg{background:#2d200a}
+.ab-type{font-size:14px;font-weight:700;margin-bottom:3px}
+.ab-type.crit{color:#f87171}
+.ab-type.urg{color:#fbbf24}
+.ab-type.info{color:#60a5fa}
+.ab-meta{font-size:11px;color:#4a7a4a}
+.ab-id{font-size:10px;color:#2a5a2a;margin-top:3px;font-variant-numeric:tabular-nums}
+.prio-tag{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;margin-left:auto;align-self:flex-start;flex-shrink:0}
+.prio-tag.crit{background:#3d1515;color:#f87171;border:0.5px solid #5a2020}
+.prio-tag.urg{background:#3d2a00;color:#fbbf24;border:0.5px solid #5a3a00}
+.prio-tag.ok{background:#0f2d0f;color:#4ade80;border:0.5px solid #1a4a1a}
+
+.block{background:#0d1a0d;border:0.5px solid #1a3a1a;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.block-title{font-size:10px;font-weight:600;color:#2a6a2a;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.block-title i{font-size:14px;color:#4ade80}
+.fr{display:grid;grid-template-columns:120px 1fr;gap:6px;margin-bottom:6px;align-items:start}
+.fl{font-size:11px;color:#4a7a4a}
+.fv{font-size:12px;font-weight:500;color:#e8f5e8}
+.fv.red{color:#f87171}.fv.amber{color:#fbbf24}.fv.green{color:#4ade80}.fv.blue{color:#60a5fa}.fv.mono{font-family:monospace;font-size:11px;color:#60a5fa}
+
+.source-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:600;background:#0a1a2d;color:#60a5fa;border:0.5px solid #1a3a5a}
+
+.map-box{height:140px;background:#080f08;border:0.5px solid #1a3a1a;border-radius:8px;overflow:hidden;position:relative;margin-bottom:10px}
+.map-box svg{position:absolute;inset:0}
+.map-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.pulse-ring{width:12px;height:12px;border-radius:50%;background:#f87171;border:2px solid #fff;box-shadow:0 0 0 0 rgba(248,113,113,.5);animation:gpulse 1.5s infinite}
+@keyframes gpulse{0%{box-shadow:0 0 0 0 rgba(248,113,113,.5)}100%{box-shadow:0 0 0 16px rgba(248,113,113,0)}}
+.map-info-tag{position:absolute;bottom:8px;left:8px;background:#0d1a0d;border:0.5px solid #1a3a1a;border-radius:6px;padding:4px 8px;font-size:10px;color:#4ade80;display:flex;align-items:center;gap:5px}
+
+.btn-row{display:flex;gap:8px;margin-bottom:8px}
+.btn{flex:1;padding:9px 10px;border-radius:8px;border:0.5px solid #1a3a1a;background:#111f11;font-size:11px;font-weight:600;cursor:pointer;color:#e8f5e8;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s}
+.btn:hover{background:#1a3a1a}
+.btn.primary{background:#003D1A;border-color:#006633;color:#4ade80}
+.btn.primary:hover{background:#004d22}
+.btn.danger{background:#2d1515;border-color:#5a2020;color:#f87171}
+.btn.danger:hover{background:#3d1515}
+.btn.blue{background:#0a1a2d;border-color:#1a3a5a;color:#60a5fa}
+
+/* TIMELINE */
+.tl{list-style:none}
+.tl-item{display:flex;gap:10px;margin-bottom:8px}
+.tl-dot-wrap{display:flex;flex-direction:column;align-items:center;width:8px}
+.tl-d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tl-d.g{background:#4ade80}.tl-d.b{background:#60a5fa}.tl-d.a{background:#fbbf24}.tl-d.r{background:#f87171}.tl-d.x{background:#1a3a1a}
+.tl-line{width:1px;background:#1a3a1a;flex:1;margin-top:3px}
+.tl-t{font-size:10px;color:#2a5a2a;font-variant-numeric:tabular-nums}
+.tl-txt{font-size:11px;color:#c8e8c8;margin-top:1px;line-height:1.5}
+
+/* ═══ DROITE ═══ */
+.sidebar-right{background:#0d1a0d;border-left:1px solid #1a3a1a;display:flex;flex-direction:column;overflow:hidden}
+.sr-sec{padding:10px 12px;border-bottom:0.5px solid #1a3a1a}
+.res-list{overflow-y:auto;flex:1}
+.res-list::-webkit-scrollbar{width:3px}.res-list::-webkit-scrollbar-track{background:#0d1a0d}.res-list::-webkit-scrollbar-thumb{background:#1a3a1a}
+.res-item{padding:9px 12px;border-bottom:0.5px solid #1a3a1a;display:flex;align-items:center;gap:8px}
+.res-ico{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.res-ico.samu{background:#0f2d0f;color:#4ade80}
+.res-ico.fire{background:#2d200a;color:#fbbf24}
+.res-ico.police{background:#0a1a2d;color:#60a5fa}
+.res-ico.gend{background:#1a0f2d;color:#c084fc}
+.res-name{font-size:11px;font-weight:600;color:#c8e8c8}
+.res-det{font-size:9px;color:#4a7a4a;margin-top:1px}
+.res-badge{font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;flex-shrink:0}
+.rb-ok{background:#0f2d0f;color:#4ade80;border:0.5px solid #1a4a1a}
+.rb-busy{background:#2d1515;color:#f87171;border:0.5px solid #5a1a1a}
+.rb-route{background:#2d200a;color:#fbbf24;border:0.5px solid #5a3a0a}
+
+.notes-wrap{padding:10px 12px;border-top:0.5px solid #1a3a1a}
+.notes-wrap textarea{width:100%;height:64px;resize:none;background:#080f08;border:0.5px solid #1a3a1a;border-radius:8px;color:#c8e8c8;font-size:11px;font-family:inherit;padding:8px;outline:none}
+.notes-wrap textarea:focus{border-color:#2a5a2a}
+.btn-sm-row{display:flex;gap:6px;margin-top:6px}
+.btn-sm{flex:1;padding:7px;font-size:10px;font-weight:600;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn-sm.green{background:#003D1A;border:none;color:#4ade80}
+.btn-sm.green:hover{background:#004d22}
+.btn-sm.gray{background:none;border:0.5px solid #1a3a1a;color:#4a7a4a}
+
+/* NOTIF */
+.notif-overlay{position:fixed;top:50px;right:16px;z-index:100;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.notif{background:#0d1a0d;border:1px solid #2a6a2a;border-radius:10px;padding:12px 16px;font-size:12px;color:#e8f5e8;min-width:260px;pointer-events:all;animation:slideIn .3s ease;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.notif.danger{border-color:#5a2020;background:#1a0a0a}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.notif-title{font-size:11px;font-weight:700;color:#4ade80;margin-bottom:4px}
+.notif.danger .notif-title{color:#f87171}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:16px">
+    <span class="logo">CNRD-<span>221</span></span>
+    <span class="status-live"><span class="dot-live"></span>Système opérationnel</span>
+    <span class="clock" id="clock">--:--:--</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span style="font-size:10px;color:#4a7a4a">Alertes actives :</span>
+    <span id="badge-active" style="font-size:12px;font-weight:700;color:#f87171">4</span>
+    <span class="op-info">OP-07 · Aminata DIALLO · Poste 3</span>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- ══ GAUCHE ══ -->
+<div class="sidebar-left">
+  <div class="sl-top">
+    <div class="sec-label">Vue d'ensemble temps réel</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-n r" id="s-new">4</div><div class="stat-l">Nouvelles</div></div>
+      <div class="stat-box"><div class="stat-n a" id="s-prog">7</div><div class="stat-l">En cours</div></div>
+      <div class="stat-box"><div class="stat-n g" id="s-done">23</div><div class="stat-l">Résolues (24h)</div></div>
+      <div class="stat-box"><div class="stat-n w">12</div><div class="stat-l">Opérateurs</div></div>
+    </div>
+  </div>
+  <div class="queue-header">
+    <span class="sec-label" style="margin:0">File d'attente</span>
+    <span class="q-count" id="q-count">11 alertes</span>
+  </div>
+  <div class="queue-list" id="queue"></div>
+</div>
+
+<!-- ══ CENTRE ══ -->
+<div class="main">
+  <div class="tabs">
+    <button class="tab active" onclick="setTab('fiche',this)">Fiche alerte</button>
+    <button class="tab" onclick="setTab('timeline',this)">Chronologie</button>
+    <button class="tab" onclick="setTab('refus',this)">Refus soins</button>
+    <button class="tab" onclick="setTab('dispatch',this)">Dispatch</button>
+    <button class="tab" onclick="setTab('stats',this)">Statistiques</button>
+  </div>
+
+  <!-- FICHE -->
+  <div class="panel active" id="panel-fiche">
+    <div class="alert-banner crit" id="banner">
+      <div class="ab-icon crit" id="ab-icon">🚑</div>
+      <div>
+        <div class="ab-type crit" id="ab-type">Urgence médicale — Malaise cardiaque</div>
+        <div class="ab-meta" id="ab-meta">SOS géolocalisé via application 221 · Alerte prioritaire</div>
+        <div class="ab-id">Dossier <span id="ab-id">#221-2026-0047</span> · Reçu il y a <span id="ab-ago" style="font-variant-numeric:tabular-nums">00:00</span></div>
+      </div>
+      <div class="prio-tag crit" id="ab-prio">CRITIQUE</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title"><i class="ti ti-device-mobile" aria-hidden="true"></i>Source — Application 221</div>
+      <div class="fr"><span class="fl">Mode de signal</span><span class="fv"><span class="source-chip"><i class="ti ti-urgent" aria-hidden="true"></i><span id="f-sig">SOS géolocalisé · Urgence médicale</span></span></span></div>
+      <div class="fr"><span class="fl">Numéro</span><span class="fv" id="f-tel">+221 77 4XX XX XX</span></div>
+      <div class="fr"><span class="fl">Langue</span><span class="fv">Français</span></div>
+      <div class="fr"><span class="fl">Timestamp réception</span><span class="fv mono" id="f-ts">2026-06-09 09:39:14</span></div>
+    </div>
+
+    <div class="block">
+      <div class="block-title"><i class="ti ti-map-pin" aria-hidden="true"></i>Localisation GPS</div>
+      <div class="map-box">
+        <svg width="100%" height="140" viewBox="0 0 240 140"><defs><pattern id="g" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0L0 0 0 20" fill="none" stroke="#1a3a1a" stroke-width="0.5"/></pattern></defs><rect width="240" height="140" fill="#080f08"/><rect width="240" height="140" fill="url(#g)"/><line x1="0" y1="70" x2="240" y2="70" stroke="#1a3a1a" stroke-width="0.5"/><line x1="120" y1="0" x2="120" y2="140" stroke="#1a3a1a" stroke-width="0.5"/><circle cx="120" cy="70" r="28" fill="none" stroke="#4ade80" stroke-width="0.5" opacity="0.3"/><circle cx="120" cy="70" r="14" fill="none" stroke="#4ade80" stroke-width="0.5" opacity="0.4"/></svg>
+        <div class="map-pulse"><div class="pulse-ring"></div></div>
+        <div class="map-info-tag"><i class="ti ti-gps" aria-hidden="true"></i>GPS actif · Précision ±8m</div>
+      </div>
+      <div class="fr"><span class="fl">Coordonnées</span><span class="fv mono" id="f-gps">14.6937°N, 17.4441°W</span></div>
+      <div class="fr"><span class="fl">Adresse estimée</span><span class="fv" id="f-addr">Av. Cheikh Anta Diop, Dakar · Plateau</span></div>
+    </div>
+
+    <div class="block">
+      <div class="block-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Informations déclarées</div>
+      <div class="fr"><span class="fl">Type d'urgence</span><span class="fv red" id="f-urg">Urgence médicale</span></div>
+      <div class="fr"><span class="fl">Description</span><span class="fv" id="f-desc">Malaise, douleur thoracique intense, personne consciente</span></div>
+      <div class="fr"><span class="fl">Victimes</span><span class="fv">1 personne</span></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn primary" onclick="doDispatch()"><i class="ti ti-send" aria-hidden="true"></i> Dispatcher SAMU</button>
+      <button class="btn blue" onclick="setTab('dispatch',document.querySelectorAll('.tab')[3])"><i class="ti ti-users" aria-hidden="true"></i> Multi-dispatch</button>
+      <button class="btn danger" onclick="escalate()"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Escalader</button>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="panel" id="panel-timeline">
+    <div class="block">
+      <div class="block-title"><i class="ti ti-clock" aria-hidden="true"></i>Chronologie de l'alerte</div>
+      <ul class="tl" id="tl-list"></ul>
+    </div>
+  </div>
+
+  <!-- REFUS SOINS -->
+  <div class="panel" id="panel-refus">
+    <div class="alert-banner" style="background:#1a0a2d;border:1px solid #5a1a8a;margin-bottom:12px">
+      <div class="ab-icon" style="background:#2d1545;font-size:22px">🏥</div>
+      <div>
+        <div class="ab-type" style="color:#c084fc">Signalement refus de soins — #RS-2026-012</div>
+        <div class="ab-meta">Reçu via App 221 · Module Refus · il y a 5 min</div>
+        <div class="ab-id">Horodaté · Géolocalisé · Transmis automatiquement</div>
+      </div>
+      <div class="prio-tag" style="background:#2d1545;color:#c084fc;border-color:#5a1a8a">URGENT</div>
+    </div>
+    <div class="block">
+      <div class="block-title"><i class="ti ti-building-hospital" aria-hidden="true"></i>Établissement concerné</div>
+      <div class="fr"><span class="fl">Établissement</span><span class="fv red">Clinique privée · Non identifiée</span></div>
+      <div class="fr"><span class="fl">GPS</span><span class="fv mono">14.7012°N, 17.4388°W</span></div>
+      <div class="fr"><span class="fl">Adresse estimée</span><span class="fv">Sicap Liberté, Dakar</span></div>
+      <div class="fr"><span class="fl">Motif déclaré</span><span class="fv red">💰 Financier — absence de caution</span></div>
+      <div class="fr"><span class="fl">Nature urgence</span><span class="fv">Urgence obstétricale · accouchement</span></div>
+      <div class="fr"><span class="fl">Description</span><span class="fv">La clinique refuse de recevoir la patiente sans paiement préalable de 50 000 FCFA. Patiente en travail.</span></div>
+    </div>
+    <div class="block">
+      <div class="block-title"><i class="ti ti-send" aria-hidden="true"></i>Destinataires du signalement (auto)</div>
+      <div class="fr"><span class="fl">CNRD-221</span><span class="fv green">✓ Reçu · Dispatch en cours</span></div>
+      <div class="fr"><span class="fl">Min. Santé</span><span class="fv green">✓ Transmis automatiquement</span></div>
+      <div class="fr"><span class="fl">Ordre Médecins</span><span class="fv green">✓ Transmis automatiquement</span></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn primary" onclick="orientRefus()"><i class="ti ti-ambulance" aria-hidden="true"></i> Orienter CHU Dantec</button>
+      <button class="btn danger" onclick="signalRefus()"><i class="ti ti-send" aria-hidden="true"></i> Signaler Min. Santé</button>
+    </div>
+  </div>
+
+  <!-- DISPATCH -->
+  <div class="panel" id="panel-dispatch">
+    <div class="block">
+      <div class="block-title"><i class="ti ti-send" aria-hidden="true"></i>Sélection des ressources à dispatcher</div>
+      <div id="dispatch-units-list"></div>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn primary" onclick="confirmDispatch()"><i class="ti ti-check" aria-hidden="true"></i> Confirmer dispatch</button>
+        <button class="btn" onclick="setTab('fiche',document.querySelectorAll('.tab')[0])"><i class="ti ti-arrow-left" aria-hidden="true"></i> Retour fiche</button>
+      </div>
+      <div id="dispatch-confirm" style="font-size:11px;color:#4ade80;margin-top:8px"></div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="panel" id="panel-stats">
+    <div class="block">
+      <div class="block-title"><i class="ti ti-chart-bar" aria-hidden="true"></i>Statistiques du poste · Aujourd'hui</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="stat-box"><div class="stat-n g">34</div><div class="stat-l">Alertes traitées</div></div>
+        <div class="stat-box"><div class="stat-n w">3m24s</div><div class="stat-l">Délai moyen dispatch</div></div>
+        <div class="stat-box"><div class="stat-n g">97%</div><div class="stat-l">Taux résolution</div></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div class="fl" style="margin-bottom:8px">Répartition par type d'urgence</div>
+        <div id="stats-bars"></div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="block-title"><i class="ti ti-building-hospital" aria-hidden="true"></i>Capacité hospitalière temps réel</div>
+      <div id="hosp-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DROITE ══ -->
+<div class="sidebar-right">
+  <div class="sr-sec">
+    <div class="sec-label">Ressources disponibles</div>
+  </div>
+  <div class="res-list" id="resources"></div>
+  <div class="notes-wrap">
+    <div class="sec-label" style="margin-bottom:6px">Notes opérateur</div>
+    <textarea placeholder="Saisir des notes sur l'intervention..."></textarea>
+    <div class="btn-sm-row">
+      <button class="btn-sm green" onclick="transmit()">Transmettre</button>
+      <button class="btn-sm gray" onclick="closeAlert()">Clôturer</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="notif-overlay" id="notif-overlay"></div>
+
+<script>
+const ALERTS=[
+  {id:'0047',ico:'🚑',cls:'med',pcls:'crit',title:'Urgence médicale · Malaise',sub:'Av. Cheikh Anta Diop · Plateau',time:'00:02',status:'new',urgtype:'Urgence médicale',desc:'Malaise, douleur thoracique intense, personne consciente',addr:'Av. Cheikh Anta Diop, Dakar · Plateau',gps:'14.6937°N, 17.4441°W',tel:'+221 77 4XX XX XX',sig:'SOS géolocalisé · Urgence médicale',prio:'CRITIQUE',ts:'2026-06-09 09:39:14'},
+  {id:'0046',ico:'🔥',cls:'fir',pcls:'crit',title:'Incendie · Appartement',sub:'Médina · Rue 18',time:'00:07',status:'prog',urgtype:'Incendie',desc:'Fumée au 3e étage, immeuble résidentiel, 2 personnes signalées',addr:'Rue 18, Médina · Dakar',gps:'14.6892°N, 17.4367°W',tel:'+221 76 5XX XX XX',sig:'SOS géolocalisé · Incendie',prio:'CRITIQUE',ts:'2026-06-09 09:34:22'},
+  {id:'0045',ico:'🛡',cls:'sec',pcls:'urg',title:'Agression · Mode Témoin',sub:'Sacré-Cœur 3',time:'00:12',status:'prog',urgtype:'Sécurité — Agression',desc:'Témoin signale agression à main armée, 1 victime à terre',addr:'Sacré-Cœur 3, Route HLM',gps:'14.7023°N, 17.4512°W',tel:'+221 70 3XX XX XX',sig:'Mode Témoin · Signalement citoyen',prio:'URGENT',ts:'2026-06-09 09:29:05'},
+  {id:'0044',ico:'🏥',cls:'ref',pcls:'urg',title:'Refus de soins · Clinique',sub:'Sicap Liberté',time:'00:17',status:'new',urgtype:'Refus de soins hospitaliers',desc:'Urgence obstétricale refusée pour motif financier',addr:'Sicap Liberté, Dakar',gps:'14.7012°N, 17.4388°W',tel:'+221 78 9XX XX XX',sig:'App 221 · Module Refus',prio:'URGENT',ts:'2026-06-09 09:24:18'},
+  {id:'0043',ico:'🌊',cls:'traj',pcls:'urg',title:'Trajet expiré · Zone inondable',sub:'Parcelles Assainies',time:'00:24',status:'new',urgtype:'Inondation — Alerte trajet',desc:'Trajet sécurisé expiré, dernier GPS en zone inondable',addr:'Parcelles Assainies, unité 17',gps:'14.7234°N, 17.4289°W',tel:'+221 77 2XX XX XX',sig:'Trajet Sécurisé · Alerte automatique',prio:'URGENT',ts:'2026-06-09 09:17:44'},
+  {id:'0042',ico:'🚑',cls:'med',pcls:'crit',title:'Noyade · Baie de Hann',sub:'Plage Hann',time:'00:31',status:'prog',urgtype:'Urgence médicale — Noyade',desc:'Mode témoin : personne en détresse dans l\'eau à 50m du bord',addr:'Plage de Hann, Dakar',gps:'14.7156°N, 17.4089°W',tel:'+221 76 1XX XX XX',sig:'Mode Témoin · Géolocalisé',prio:'CRITIQUE',ts:'2026-06-09 09:10:33'},
+  {id:'0041',ico:'🛡',cls:'sec',pcls:'urg',title:'Violence dom. · Alerte silencieuse',sub:'Ouakam · Cité Comico',time:'00:38',status:'new',urgtype:'Violence domestique',desc:'Alerte silencieuse activée depuis App 221, position GPS partagée',addr:'Cité Comico, Ouakam',gps:'14.7089°N, 17.4667°W',tel:'+221 77 8XX XX XX',sig:'Alerte Silencieuse · Violence domestique',prio:'URGENT',ts:'2026-06-09 09:03:12'},
+  {id:'0040',ico:'🚑',cls:'med',pcls:'crit',title:'AVC · Fann Résidence',sub:'Fann Résidence',time:'00:45',status:'prog',urgtype:'AVC / Infarctus',desc:'Patient de 67 ans, chute soudaine, paralysie faciale',addr:'Fann Résidence, Dakar',gps:'14.7156°N, 17.4523°W',tel:'+221 77 6XX XX XX',sig:'SOS géolocalisé · AVC',prio:'CRITIQUE',ts:'2026-06-09 08:56:40'},
+  {id:'0039',ico:'🔥',cls:'fir',pcls:'ok',title:'Accident route · VDN',sub:'VDN, Échangeur Sacré-Cœur',time:'01:02',status:'done',urgtype:'Accident de la route',desc:'Carambolage 3 véhicules, 2 blessés légers',addr:'VDN, Échangeur Sacré-Cœur',gps:'14.7201°N, 17.4445°W',tel:'+221 76 7XX XX XX',sig:'SOS géolocalisé · Accident',prio:'RÉSOLU',ts:'2026-06-09 08:39:05'},
+  {id:'0038',ico:'🏥',cls:'ref',pcls:'ok',title:'Refus soins · CHU Dantec',sub:'Plateau',time:'01:18',status:'done',urgtype:'Refus soins traité',desc:'Patient orienté vers Hôpital Principal. Dossier transmis.',addr:'Av. Pasteur, Plateau',gps:'14.6853°N, 17.4456°W',tel:'+221 77 5XX XX XX',sig:'App 221 · Module Refus',prio:'TRAITÉ',ts:'2026-06-09 08:23:18'},
+  {id:'0037',ico:'🌊',cls:'traj',pcls:'ok',title:'Inondation · Grand Yoff',sub:'HLM 5',time:'01:35',status:'done',urgtype:'Inondation',desc:'Famille de 4 personnes évacuée, pompiers intervenus',addr:'HLM 5, Grand Yoff',gps:'14.7289°N, 17.4312°W',tel:'+221 78 4XX XX XX',sig:'App 221 · Mode Témoin',prio:'RÉSOLU',ts:'2026-06-09 08:06:52'},
+];
+
+const RESOURCES=[
+  {ico:'🚑',cls:'samu',name:'SAMU-01 · Dakar Centre',det:'Ambulance médicalisée · 2,1 km',st:'Disponible',sc:'rb-ok'},
+  {ico:'🚑',cls:'samu',name:'SAMU-03 · Plateau',det:'SMUR · 3,4 km',st:'Disponible',sc:'rb-ok'},
+  {ico:'🚒',cls:'fire',name:'BNSP-Dieuppeul',det:'Fourgon pompe · 1,8 km',st:'Disponible',sc:'rb-ok'},
+  {ico:'🚒',cls:'fire',name:'BNSP-Médina',det:'Ambulance · En route',st:'En route',sc:'rb-route'},
+  {ico:'🚔',cls:'police',name:'Police Plateau · GP-07',det:'Patrouille · 0,9 km',st:'Disponible',sc:'rb-ok'},
+  {ico:'🚔',cls:'police',name:'Police Médina · GP-12',det:'Patrouille · 2,3 km',st:'Occupé',sc:'rb-busy'},
+  {ico:'🛡',cls:'gend',name:'Gendarmerie · BT-04',det:'Appui sécurité · 4,1 km',st:'Disponible',sc:'rb-ok'},
+  {ico:'🏥',cls:'samu',name:'CHU Le Dantec',det:'Urgences — 3 lits dispo',st:'Disponible',sc:'rb-ok'},
+  {ico:'🏥',cls:'samu',name:'Hôpital Principal',det:'Urgences — 1 lit dispo',st:'Disponible',sc:'rb-ok'},
+  {ico:'🏥',cls:'fire',name:'CHU Fann',det:'Urgences — SATURÉ',st:'Saturé',sc:'rb-busy'},
+];
+
+const TIMELINE=[
+  {d:'b',t:'09:39:14',txt:'App 221 : bouton SOS pressé · Position GPS transmise automatiquement'},
+  {d:'b',t:'09:39:15',txt:'Réception CNRD-221 · Dossier #221-2026-0047 créé · Classification automatique'},
+  {d:'',t:'09:39:15',txt:'Géolocalisation AML : 14.6937°N, 17.4441°W · Précision ±8m'},
+  {d:'a',t:'09:39:16',txt:'Priorité automatique : CRITIQUE · Type : Urgence médicale'},
+  {d:'',t:'09:39:17',txt:'Notification OP-07 · Alerte assignée · Sonnerie poste 3'},
+  {d:'g',t:'09:39:22',txt:'Prise en charge OP-07 · Appel vocal établi avec l\'appelant'},
+  {d:'',t:'09:40:01',txt:'Description complétée : douleur thoracique, personne consciente'},
+  {d:'b',t:'09:40:10',txt:'Recherche automatique ressources : SAMU-01, SAMU-03, CHU Dantec'},
+  {d:'x',t:'09:41:28',txt:'En attente de dispatch · OP-07 en communication active'},
+];
+
+const DISPATCH_UNITS=[
+  {id:'u1',name:'SAMU-01 · Dakar Centre',det:'Ambulance médicalisée · ETA ~4 min',checked:true},
+  {id:'u2',name:'Police Plateau · GP-07',det:'Sécuriser la zone · ETA ~2 min',checked:false},
+  {id:'u3',name:'CHU Le Dantec',det:'Préparer box urgences cardiologiques',checked:true},
+];
+
+let selected=0, elapsed=134;
+
+function renderQueue(){
+  document.getElementById('queue').innerHTML=ALERTS.map((a,i)=>`
+    <div class="qi ${a.status==='new'?'crit':a.status==='done'?'done':'urg'} ${i===selected?'active':''}" onclick="sel(${i})">
+      <div class="qi-ico ${a.cls}">${a.ico}</div>
+      <div class="qi-info">
+        <div class="qi-title">${a.title}</div>
+        <div class="qi-sub">${a.sub}</div>
+        <div class="qi-badges"><span class="badge ${a.status==='new'?'badge-new':a.status==='done'?'badge-done':'badge-prog'}">${a.status==='new'?'Nouveau':a.status==='done'?'Résolu':'En cours'}</span></div>
+      </div>
+      <div class="qi-time">${a.time}</div>
+    </div>`).join('');
+}
+
+function sel(i){
+  selected=i;elapsed=0;
+  renderQueue();
+  updateFiche();
+  notify('Alerte sélectionnée','Dossier #221-2026-'+ALERTS[i].id+' · '+ALERTS[i].urgtype,'');
+}
+
+function updateFiche(){
+  const a=ALERTS[selected];
+  const pcls=a.pcls||'urg';
+  const banner=document.getElementById('banner');
+  banner.className='alert-banner '+pcls;
+  document.getElementById('ab-icon').className='ab-icon '+pcls;
+  document.getElementById('ab-icon').textContent=a.ico;
+  document.getElementById('ab-type').className='ab-type '+pcls;
+  document.getElementById('ab-type').textContent=a.urgtype;
+  document.getElementById('ab-meta').textContent=a.sig+' · Alerte '+(pcls==='crit'?'prioritaire':'urgente');
+  document.getElementById('ab-id').textContent='#221-2026-'+a.id;
+  document.getElementById('ab-prio').textContent=a.prio;
+  document.getElementById('ab-prio').className='prio-tag '+pcls;
+  document.getElementById('f-sig').textContent=a.sig;
+  document.getElementById('f-tel').textContent=a.tel;
+  document.getElementById('f-ts').textContent=a.ts;
+  document.getElementById('f-gps').textContent=a.gps;
+  document.getElementById('f-addr').textContent=a.addr;
+  document.getElementById('f-urg').textContent=a.urgtype;
+  document.getElementById('f-desc').textContent=a.desc;
+}
+
+function renderTimeline(){
+  document.getElementById('tl-list').innerHTML=TIMELINE.map((t,i)=>`
+    <li class="tl-item">
+      <div class="tl-dot-wrap">
+        <div class="tl-d ${t.d||'x'}"></div>
+        ${i<TIMELINE.length-1?'<div class="tl-line"></div>':''}
+      </div>
+      <div style="flex:1">
+        <div class="tl-t">${t.t}</div>
+        <div class="tl-txt">${t.txt}</div>
+      </div>
+    </li>`).join('');
+}
+
+function renderResources(){
+  document.getElementById('resources').innerHTML=RESOURCES.map(r=>`
+    <div class="res-item">
+      <div class="res-ico ${r.cls}">${r.ico}</div>
+      <div style="flex:1;min-width:0">
+        <div class="res-name">${r.name}</div>
+        <div class="res-det">${r.det}</div>
+      </div>
+      <span class="res-badge ${r.sc}">${r.st}</span>
+    </div>`).join('');
+}
+
+function renderDispatch(){
+  document.getElementById('dispatch-units-list').innerHTML=DISPATCH_UNITS.map(u=>`
+    <label style="display:flex;align-items:flex-start;gap:10px;padding:10px;border:0.5px solid #1a3a1a;border-radius:8px;margin-bottom:8px;cursor:pointer;background:#111f11">
+      <input type="checkbox" ${u.checked?'checked':''} style="margin-top:2px">
+      <div><div style="font-size:12px;font-weight:600;color:#e8f5e8">${u.name}</div><div style="font-size:11px;color:#4a7a4a;margin-top:2px">${u.det}</div></div>
+    </label>`).join('');
+}
+
+function renderStats(){
+  const types=[{l:'Urgence médicale',v:42,c:'#f87171'},{l:'Incendie / accident',v:18,c:'#fbbf24'},{l:'Sécurité',v:22,c:'#60a5fa'},{l:'Refus de soins',v:8,c:'#c084fc'},{l:'Trajet sécurisé',v:10,c:'#4ade80'}];
+  const max=Math.max(...types.map(t=>t.v));
+  document.getElementById('stats-bars').innerHTML=types.map(t=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:10px;color:#4a7a4a;width:130px;flex-shrink:0">${t.l}</span>
+      <div style="flex:1;height:8px;background:#111f11;border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${Math.round(t.v/max*100)}%;background:${t.c};border-radius:4px"></div>
+      </div>
+      <span style="font-size:11px;color:#c8e8c8;font-weight:600;width:24px;text-align:right">${t.v}%</span>
+    </div>`).join('');
+  const hosps=[{n:'CHU Le Dantec',lits:3,max:5},{n:'Hôpital Principal',lits:1,max:4},{n:'CHU Fann',lits:0,max:3},{n:'HOGGY',lits:4,max:6}];
+  document.getElementById('hosp-status').innerHTML=hosps.map(h=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:8px;background:#111f11;border-radius:8px;border:0.5px solid #1a3a1a">
+      <span style="font-size:11px;color:#c8e8c8;flex:1">${h.n}</span>
+      <span style="font-size:11px;font-weight:600;color:${h.lits===0?'#f87171':h.lits<2?'#fbbf24':'#4ade80'}">${h.lits} lit${h.lits>1?'s':''} dispo</span>
+      <div style="width:60px;height:6px;background:#1a3a1a;border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${Math.round(h.lits/h.max*100)}%;background:${h.lits===0?'#f87171':h.lits<2?'#fbbf24':'#4ade80'};border-radius:3px"></div>
+      </div>
+    </div>`).join('');
+}
+
+function setTab(id,btn){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+function doDispatch(){
+  TIMELINE.push({d:'g',t:new Date().toLocaleTimeString('fr-FR'),txt:'Dispatch SAMU-01 confirmé par OP-07 · ETA 4 min · CHU Dantec notifié'});
+  renderTimeline();
+  notify('Dispatch confirmé','SAMU-01 en route · ETA 4 min · CHU Dantec préparé','ok');
+}
+
+function confirmDispatch(){
+  const checked=document.querySelectorAll('#dispatch-units-list input:checked');
+  TIMELINE.push({d:'g',t:new Date().toLocaleTimeString('fr-FR'),txt:`Multi-dispatch confirmé : ${checked.length} unité(s) · Notifications envoyées`});
+  renderTimeline();
+  document.getElementById('dispatch-confirm').textContent='✓ Dispatch confirmé — '+checked.length+' unité(s) notifiée(s) · '+new Date().toLocaleTimeString('fr-FR');
+  notify('Multi-dispatch confirmé',checked.length+' unité(s) dispatchée(s)','ok');
+}
+
+function escalate(){
+  TIMELINE.push({d:'a',t:new Date().toLocaleTimeString('fr-FR'),txt:'Escalade vers superviseur de garde · Poste 1 · Dossier #221-2026-'+ALERTS[selected].id});
+  renderTimeline();
+  notify('Escalade transmise','Superviseur Poste 1 notifié','warn');
+}
+
+function orientRefus(){
+  TIMELINE.push({d:'g',t:new Date().toLocaleTimeString('fr-FR'),txt:'Refus soins : patient orienté CHU Dantec · SAMU-01 dispatché'});
+  renderTimeline();
+  notify('Orientation effectuée','CHU Dantec confirmé · SAMU-01 en route','ok');
+}
+
+function signalRefus(){
+  notify('Signalement transmis','Ministère de la Santé + Ordre des Médecins notifiés · Dossier RS-2026-012','warn');
+}
+
+function transmit(){
+  notify('Notes transmises','Enregistrées dans le dossier · '+new Date().toLocaleTimeString('fr-FR'),'ok');
+}
+
+function closeAlert(){
+  TIMELINE.push({d:'x',t:new Date().toLocaleTimeString('fr-FR'),txt:'Dossier clôturé par OP-07 · Résolution confirmée'});
+  renderTimeline();
+  notify('Dossier clôturé','#221-2026-'+ALERTS[selected].id+' · '+new Date().toLocaleTimeString('fr-FR'),'ok');
+  document.getElementById('s-done').textContent=parseInt(document.getElementById('s-done').textContent)+1;
+}
+
+function notify(title,msg,type){
+  const el=document.createElement('div');
+  el.className='notif'+(type===''?' danger':'');
+  el.innerHTML=`<div class="notif-title">${title}</div><div style="font-size:11px;color:#c8e8c8">${msg}</div>`;
+  document.getElementById('notif-overlay').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+function tick(){
+  document.getElementById('clock').textContent=new Date().toLocaleTimeString('fr-FR');
+  elapsed++;
+  const el=document.getElementById('ab-ago');
+  if(el){const m=Math.floor(elapsed/60),s=elapsed%60;el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
+}
+
+// Simulation nouvelles alertes toutes les 45s
+function simNewAlert(){
+  const types=['🚑 Urgence médicale · Fann Résidence','🔥 Départ de feu · Colobane','🛡 Signalement agression · HLM 6'];
+  const t=types[Math.floor(Math.random()*types.length)];
+  notify('🔴 NOUVELLE ALERTE',t+' · Reçue maintenant via App 221','');
+  document.getElementById('s-new').textContent=parseInt(document.getElementById('s-new').textContent)+1;
+  document.getElementById('badge-active').textContent=parseInt(document.getElementById('badge-active').textContent)+1;
+}
+
+renderQueue();renderTimeline();renderResources();renderDispatch();renderStats();updateFiche();
+setInterval(tick,1000);
+setInterval(simNewAlert,45000);
+</script>
+</body>
+</html>
